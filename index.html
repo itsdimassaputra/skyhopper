@@ -49,6 +49,11 @@
   .score-line { display: flex; justify-content: space-between; gap: 12px; color: #6b4829; font-weight: 900; font-size: 16px; margin: 8px 0; }
   .score-line strong { color: #328b37; font-size: 20px; }
   .hint { color: #fff; font-size: 14px; font-weight: 800; line-height: 1.6; text-shadow: 2px 2px #35616a; margin: 16px 0 0; }
+  .menu-best {
+    color: #fff; font-size: 16px; font-weight: 900; letter-spacing: 1px;
+    text-shadow: 2px 2px #35616a; margin: 0 0 5px;
+  }
+  .menu-best strong { color: #fff4a6; font-size: 22px; margin-left: 5px; }
   .btn {
     appearance: none; border: 3px solid #75451f; border-radius: 9px; padding: 12px 30px;
     min-width: 150px; color: #fff; background: linear-gradient(#8be04c, #45a92e);
@@ -56,6 +61,12 @@
     text-shadow: 2px 2px #286b25; cursor: pointer; margin-top: 12px;
   }
   .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #287329; }
+  .secondary-btn {
+    background: linear-gradient(#f5f0df, #d8c79f);
+    color: #6b4829; text-shadow: 1px 1px #fff;
+    box-shadow: 0 5px 0 #9a7848; font-size: 15px; padding: 10px 20px;
+  }
+  .secondary-btn:active { box-shadow: 0 2px 0 #9a7848; }
   #live-score {
     position: absolute; top: max(16px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
     z-index: 3; color: white; font-size: clamp(38px, 10vw, 54px); font-weight: 1000;
@@ -92,6 +103,7 @@
       <path d="M68 34 L88 40 L68 45 Z" fill="#f28b19" stroke="#9a6420" stroke-width="2"/>
       <path d="M20 30 Q2 13 12 43 Q20 51 31 39" fill="#fff0a0" stroke="#9a6420" stroke-width="2"/>
     </svg>
+    <div class="menu-best">BEST SCORE: <strong id="start-best">0</strong></div>
     <button id="start-btn" class="btn">START</button>
     <p class="hint">TAP / CLICK or press SPACE / ↑ to flap<br>Fly through the pipes!</p>
   </section>
@@ -102,6 +114,7 @@
       <div class="score-line"><span>SCORE</span><strong id="final-score">0</strong></div>
       <div class="score-line"><span>BEST</span><strong id="best-score">0</strong></div>
       <button id="restart-btn" class="btn">RESTART</button>
+      <button id="menu-btn" class="btn secondary-btn">BACK TO MENU</button>
     </div>
     <p class="hint">Tap, click, or press a key to try again.</p>
   </section>
@@ -118,6 +131,7 @@
   const liveScore = document.getElementById("live-score");
   const finalScore = document.getElementById("final-score");
   const bestScoreEl = document.getElementById("best-score");
+  const startBestEl = document.getElementById("start-best");
   const muteBtn = document.getElementById("mute");
 
   // Semua ukuran gameplay menggunakan koordinat virtual agar konsisten di semua layar.
@@ -196,6 +210,7 @@
     state = "over"; bird.alive = false; sounds.hit();
     best = Math.max(best, score); saveBest(best);
     finalScore.textContent = score; bestScoreEl.textContent = best;
+    startBestEl.textContent = best;
     liveScore.classList.add("hide");
     setTimeout(() => overScreen.classList.remove("hidden"), 260);
   }
@@ -214,6 +229,15 @@
   });
   document.getElementById("start-btn").addEventListener("click", e => { e.stopPropagation(); initAudio(); startGame(); });
   document.getElementById("restart-btn").addEventListener("click", e => { e.stopPropagation(); initAudio(); startGame(); });
+  document.getElementById("menu-btn").addEventListener("click", e => {
+    e.stopPropagation();
+    resetBird();
+    state = "start";
+    overScreen.classList.add("hidden");
+    startScreen.classList.remove("hidden");
+    liveScore.classList.add("hide");
+    startBestEl.textContent = best;
+  });
   muteBtn.addEventListener("click", () => {
     muted = !muted; muteBtn.textContent = muted ? "×" : "♫";
     muteBtn.setAttribute("aria-label", muted ? "Nyalakan suara" : "Matikan suara");
@@ -373,6 +397,7 @@
 
   resetBird();
   bestScoreEl.textContent = best;
+  startBestEl.textContent = best;
   rafId = requestAnimationFrame(loop);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden && state === "playing") bird.vy = Math.max(0, bird.vy);
